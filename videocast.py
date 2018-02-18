@@ -12,34 +12,36 @@ def cast_video(video_to_search,server_root_folder,server_ip='',server_port=''):
         server_port = '80'
         
     video_name = ''
-    while video_name == '':
-        try:
-            video = google_search.search(video_to_search+' Youtube','video',no_of_results=1)
-            video_name = video.keys()[-1].split('- YouTube')[0].strip()+'.mp4'
+    index = 1
+    while video_name == '' and index < 20:
+        video = google_search.search(video_to_search,'video',no_of_results=index)
+        if '- YouTube' in video.keys()[-1]:
+            video_name = video.keys()[-1]
             video_url = video.values()[-1]
-        except:
-            pass
+        else:
+            index += 1
 
     if os.name == 'nt':
         path_separator = '\\'
     else:
         path_separator = '/'
 
-    full_path = server_root_folder+path_separator+video_name
+    full_path = server_root_folder+path_separator+video_name+'.mp4'
         
     if not os.path.exists(full_path):
         try:
             yt = pytube.YouTube(video_url)
-            print 'Downloading...'
-            yt.streams.filter(subtype='mp4').first().download(server_root_folder)
+            yt.streams.filter(subtype='mp4').first().download(server_root_folder,filename=video_name)
         except:
-            print 'There was a problem fetching the video. Please try another one. Sorry..'
+            return None
 
-    cast = pychromecast.get_chromecasts()[0]
-                
-    mc = cast.media_controller
-    cast_url = 'http://'+server_ip+':'+server_port+''+full_path.replace(server_root_folder,'').replace(path_separator,'/')
-    mc.play_media(cast_url,'video/mp4')
-    mc.block_until_active()
+    try:
+        cast = pychromecast.get_chromecasts()[0]
+        mc = cast.media_controller
+        cast_url = 'http://'+server_ip+':'+server_port+''+full_path.replace(server_root_folder,'').replace(path_separator,'/')
+        mc.play_media(cast_url,'video/mp4')
+        mc.block_until_active()
+    except:
+        return None
 
-#cast_video('google chromecast','C:\\xampp\\htdocs\\CastVideo')
+#cast_video('rahul dravid first match','C:\\xampp\\htdocs\\CastVideo')
