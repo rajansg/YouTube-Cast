@@ -94,4 +94,6 @@ def cast_video(video_to_search,server_ip='',server_port=''):
     else:
         return False
 
+    return True
+
 #cast_video('family guy first episode')
