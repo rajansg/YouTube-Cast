@@ -21,7 +21,7 @@ def host_server(hosting_port,server_root_dir):
     create_dir(server_root_dir)
 
     try:
-        server_port = int(server_port)
+        server_port = int(hosting_port)
         os.chdir(server_root_dir)
 
         Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
@@ -33,7 +33,7 @@ def host_server(hosting_port,server_root_dir):
     except:
         return False
 
-def download_youtube_video(video_to_search,dest_folder=os.path.join(os.getcwd(),'Videos')):
+def download_youtube_video(video_to_search,dest_folder=os.path.join(os.path.split(os.path.realpath(__file__))[0],'Videos')):
     create_dir(dest_folder)
 
     video_name = ''
@@ -102,28 +102,31 @@ def play_cast_video():
         return False
 
 def cast_video(video_to_search,cc_name=''):
-    global server_port
-    server_host = socket.gethostbyname(socket.gethostname())
-    server_port = 0
-    server_root_dir = os.path.join(os.getcwd(),'cast')
-   
-    threading.Thread(target=host_server,args=(server_port,server_root_dir,)).start()
-   
-    video_name = download_youtube_video(video_to_search,server_root_dir)
-
-    if video_name is not False:
-        cast_url = 'http://'+server_host+':'+server_port+'/'+video_name
-        send_to_chromecast(cast_url,cc_name)
-        return True
-    else:
+    if get_cc(cc_name) is None:
         return False
+    else:
+        global server_port
+        server_host = socket.gethostbyname(socket.gethostname())
+        server_port = 0
+        server_root_dir = os.path.join(os.path.split(os.path.realpath(__file__))[0],'cast')
+       
+        threading.Thread(target=host_server,args=(server_port,server_root_dir,)).start()
+       
+        video_name = download_youtube_video(video_to_search,server_root_dir)
+
+        if video_name is not False:
+            cast_url = 'http://'+server_host+':'+server_port+'/'+video_name
+            send_to_chromecast(cast_url,cc_name)
+            return True
+        else:
+            return False
 
 
 '''
-cast_video('family guy unaired pilot','ASS')
+cast_video('family guy unaired pilot')
 time.sleep(20)
 pause_cast_video()
 time.sleep(20)
 play_cast_video()
-'''
 
+'''
