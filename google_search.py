@@ -2,22 +2,30 @@ import requests,urllib
 from bs4 import BeautifulSoup as BS
 
 def get_summary(search_term):
+    result_text = ''
     response = requests.get('https://www.google.com/search?q='+search_term)
     
     soup = BS(response.text,'html.parser')
 
-    if 'what' in search_term:
-        for result in soup.find('div',{'class':'g'}):
-            try:
-                return result.find('div').text
-            except:
-                return result.text
-    else:
-        for result in soup.findAll('span',{'class':'st'}):
-            if not '...' in result.text and not result.text is u'':
-                return result.text
+    for result in soup.find('div',{'class':'g'}):
+        if not '...' in result.text and not result.text is u'' and not u'\u25ba' in result.text:
+            if 'mean' in search_term:
+                result_text += result.text
+            else:
+                try:
+                    result_text += result.find('div').text
+                except:
+                    result_text += result.text
 
-    return None
+    if len(result_text) == 0:
+        for result in soup.findAll('span',{'class':'st'}):
+            if not '...' in result.text and not result.text is u'' and not u'\u25ba' in result.text:
+                result_text += result.text
+                break
+
+    result_text = result_text.replace('\n',' ').split('|')[0].strip()
+
+    return result_text
 
 def search_news(search_term=''):
     if search_term == '':
